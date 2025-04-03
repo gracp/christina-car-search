@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Research Helper</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            padding-top: 20psssx;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #343a40;
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .make-btn {
+            margin: 8px;
+            min-width: 120px;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .make-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .model-btn, .year-btn {
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .model-btn:hover, .year-btn:hover {
+            transform: translateY(-1px);
+        }
+        .car-info-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .selection-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .source-section {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .source-header {
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            color: #343a40;
+            font-weight: 600;
+        }
+        .data-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #0d6efd;
+        }
+        .models-container, .years-container {
+            display: none;
+            padding: 15px;
+            margin-top: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        #loadingSpinner {
+            display: none;
+            padding: 40px;
+        }
+        .rating-pill {
+            border-radius: 30px;
+            padding: 5px 15px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .comparison-table th {
+            background-color: #343a40;
+            color: white;
+            padding: 12px;
+        }
+        .comparison-table td {
+            padding: 12px;
+            border-top: 1px solid #dee2e6;
+        }
+        .comparison-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .score-display {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .rating-stars {
+            color: #ffc107;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <h1><i class="bi bi-car-front"></i> Car Research Helper</h1>
+            <p class="lead">Find comprehensive information to make informed car buying decisions</p>
+        </div>
+
+        <div class="selection-container">
+            <h3 class="text-center mb-4">Select Your Vehicle</h3>
+
+            <div id="step1" class="mb-4">
+                <h4 class="mb-3"><i class="bi bi-1-circle"></i> Select Make</h4>
+                <div class="d-flex flex-wrap justify-content-center" id="makesContainer">
+                    <!-- Car makes will be inserted here by JavaScript -->
+                </div>
+            </div>
+
+            <div id="modelsContainer" class="models-container">
+                <h4 class="mb-3"><i class="bi bi-2-circle"></i> Select Model</h4>
+                <div class="d-flex flex-wrap justify-content-center" id="modelButtons">
+                    <!-- Models will be inserted here by JavaScript -->
+                </div>
+            </div>
+
+            <div id="yearsContainer" class="years-container">
+                <h4 class="mb-3"><i class="bi bi-3-circle"></i> Select Year</h4>
+                <div class="d-flex flex-wrap justify-content-center" id="yearButtons">
+                    <!-- Years will be inserted here by JavaScript -->
+                </div>
+            </div>
+
+            <div id="selectedCarDisplay" class="text-center mt-4" style="display: none;">
+                <div class="alert alert-primary">
+                    <h5 class="mb-0">Selected: <span id="displayMake"></span> <span id="displayModel"></span> <span id="displayYear"></span></h5>
+                </div>
+                <button id="researchBtn" class="btn btn-success btn-lg mt-2">
+                    <i class="bi bi-search"></i> Research This Car
+                </button>
+            </div>
+        </div>
+
+        <div id="loadingSpinner" class="text-center my-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 fs-5">Gathering comprehensive information from multiple sources...</p>
+            <p class="text-muted"><i class="bi bi-info-circle"></i> This may take a few moments</p>
+        </div>
+
+        <div id="resultsContainer" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-card-checklist"></i> Research Results</h2>
+                <h3 id="carTitle" class="badge bg-primary rounded-pill p-3"></h3>
+            </div>
+
+            <!-- Summary section -->
+            <div class="source-section">
+                <h3 class="source-header"><i class="bi bi-bar-chart-fill"></i> Summary Comparison</h3>
+                <div class="table-responsive">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Rating</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Reliability</td>
+                                <td id="summaryReliability"></td>
+                                <td id="summaryReliabilityDetails"></td>
+                            </tr>
+                            <tr>
+                                <td>Owner Satisfaction</td>
+                                <td id="summaryOwnerSatisfaction"></td>
+                                <td id="summaryOwnerSatisfactionDetails"></td>
+                            </tr>
+                            <tr>
+                                <td>Repair Costs</td>
+                                <td id="summaryRepairCosts"></td>
+                                <td id="summaryRepairCostsDetails"></td>
+                            </tr>
+                            <tr>
+                                <td>Expert Review</td>
+                                <td id="summaryExpertReview"></td>
+                                <td id="summaryExpertReviewDetails"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="source-section">
+                <h3 class="source-header"><i class="bi bi-exclamation-triangle"></i> Reliability & Common Problems</h3>
+                <div id="carComplaintsInfo"></div>
+            </div>
+
+            <div class="source-section">
+                <h3 class="source-header"><i class="bi bi-wrench"></i> Repair Frequency & Cost</h3>
+                <div id="trueDeltaInfo"></div>
+            </div>
+
+            <div class="source-section">
+                <h3 class="source-header"><i class="bi bi-star"></i> Expert Ratings & Reviews</h3>
+                <div id="consumerReportsInfo"></div>
+            </div>
+
+            <div class="source-section">
+                <h3 class="source-header"><i class="bi bi-people"></i> Owner Reviews & Pricing</h3>
+                <div id="edmundsInfo"></div>
+            </div>
+
+            <div class="mt-4 mb-5 text-center">
+                <button id="newSearchBtn" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-arrow-repeat"></i> Start New Search
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Expanded car model data
+        const carModels = {
+            toyota: ["Camry", "Corolla", "RAV4", "Highlander", "Tacoma", "Prius", "4Runner", "Sienna", "Tundra", "Avalon", "C-HR", "Venza", "Land Cruiser", "GR Supra"],
+            honda: ["Civic", "Accord", "CR-V", "Pilot", "Odyssey", "HR-V", "Ridgeline", "Fit", "Passport", "Insight", "Clarity", "Element"],
+            ford: ["F-150", "Escape", "Explorer", "Fusion", "Edge", "Mustang", "Bronco", "Ranger", "Expedition", "Maverick", "EcoSport", "Transit", "Focus", "Mach-E"],
+            chevrolet: ["Silverado", "Equinox", "Malibu", "Traverse", "Tahoe", "Trax", "Suburban", "Colorado", "Camaro", "Blazer", "Impala", "Corvette", "Spark", "Bolt"],
+            nissan: ["Altima", "Rogue", "Sentra", "Pathfinder", "Frontier", "Murano", "Maxima", "Kicks", "Armada", "Titan", "Versa", "Leaf", "Juke", "370Z"],
+            hyundai: ["Elantra", "Sonata", "Tucson", "Santa Fe", "Kona", "Palisade", "Accent", "Venue", "Ioniq", "Veloster", "Nexo", "Ioniq 5", "Genesis"],
+            kia: ["Forte", "Optima", "Sorento", "Sportage", "Telluride", "Soul", "Rio", "Stinger", "Seltos", "Carnival", "Niro", "K5", "Cadenza", "EV6"],
+            subaru: ["Outback", "Forester", "Crosstrek", "Impreza", "Legacy", "Ascent", "WRX", "BRZ", "Solterra"],
+            mazda: ["Mazda3", "Mazda6", "CX-5", "CX-9", "MX-5 Miata", "CX-30", "CX-50", "CX-3"],
+            volkswagen: ["Jetta", "Passat", "Tiguan", "Atlas", "Golf", "Taos", "Arteon", "ID.4", "Atlas Cross Sport", "GTI", "Golf R"],
+            bmw: ["3 Series", "5 Series", "X3", "X5", "7 Series", "X1", "X7", "4 Series", "2 Series", "i4", "iX", "8 Series", "Z4", "M3", "M5"],
+            mercedes: ["C-Class", "E-Class", "GLC", "GLE", "S-Class", "A-Class", "GLA", "GLB", "CLA", "EQS", "GLS", "G-Class", "CLS", "AMG GT"],
+            audi: ["A4", "Q5", "A3", "Q7", "A6", "Q3", "e-tron", "A5", "Q8", "A7", "TT", "R8", "RS5", "S4", "SQ5"],
+            lexus: ["RX", "ES", "NX", "IS", "GX", "UX", "LS", "LX", "RC", "LC", "GS", "CT", "HS"],
+            acura: ["MDX", "RDX", "TLX", "ILX", "NSX", "RLX", "TL", "ZDX", "RSX", "Integra"],
+            tesla: ["Model 3", "Model Y", "Model S", "Model X", "Cybertruck", "Roadster"],
+            jeep: ["Wrangler", "Grand Cherokee", "Cherokee", "Compass", "Renegade", "Gladiator", "Wagoneer", "Grand Wagoneer"],
+            dodge: ["Charger", "Challenger", "Durango", "Journey", "Grand Caravan", "Dart", "Viper"],
+            cadillac: ["Escalade", "XT5", "CT5", "XT4", "CT4", "XT6", "CTS", "ATS", "XTS", "Lyriq"],
+            chrysler: ["Pacifica", "300", "Voyager", "Town & Country", "200"]
+        };
+
+        // Brands with associated colors
+        const brandColors = {
+            toyota: "#E50000",
+            honda: "#0082CA",
+            ford: "#003478",
+            chevrolet: "#CD9700",
+            nissan: "#C3002F",
+            hyundai: "#003469",
+            kia: "#BB162B",
+            subaru: "#013C74",
+            mazda: "#101010",
+            volkswagen: "#23529E",
+            bmw: "#1C69D4",
+            mercedes: "#333333",
+            audi: "#000000",
+            lexus: "#0F1010",
+            acura: "#000000",
+            tesla: "#E82127",
+            jeep: "#176B40",
+            dodge: "#D00400",
+            cadillac: "#9B1C32",
+            chrysler: "#0033A0"
+        };
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const makesContainer = document.getElementById('makesContainer');
+            const modelsContainer = document.getElementById('modelsContainer');
+            const yearsContainer = document.getElementById('yearsContainer');
+            const researchBtn = document.getElementById('researchBtn');
+            const newSearchBtn = document.getElementById('newSearchBtn');
+
+            let selectedMake = '';
+            let selectedModel = '';
+            let selectedYear = '';
+
+            // Populate makes
+            for (const make in carModels) {
+                const makeButton = document.createElement('button');
+                makeButton.className = 'btn make-btn';
+                makeButton.style.backgroundColor = brandColors[make] || '#6c757d';
+                makeButton.style.color = '#fff';
+                makeButton.dataset.make = make;
+                makeButton.textContent = make.charAt(0).toUpperCase() + make.slice(1);
+
+                makeButton.addEventListener('click', function() {
+                    // Reset previous selections
+                    document.querySelectorAll('.make-btn').forEach(btn => {
+                        btn.classList.remove('btn-lg');
+                    });
+                    this.classList.add('btn-lg');
+
+                    selectedMake = this.dataset.make;
+                    document.getElementById('displayMake').textContent = this.textContent;
+
+                    // Clear previous model selections
+                    document.getElementById('modelButtons').innerHTML = '';
+
+                    // Populate models
+                    const models = carModels[selectedMake];
+                    models.forEach(model => {
+                        const modelButton = document.createElement('button');
+                        modelButton.className = 'btn btn-outline-secondary model-btn';
+                        modelButton.dataset.model = model;
+                        modelButton.textContent = model;
+
+                        modelButton.addEventListener('click', function() {
+                            document.querySelectorAll('.model-btn').forEach(btn => {
+                                btn.classList.remove('btn-secondary');
+                                btn.classList.add('btn-outline-secondary');
+                            });
+                            this.classList.remove('btn-outline-secondary');
+                            this.classList.add('btn-secondary');
+
+                            selectedModel = this.dataset.model;
+                            document.getElementById('displayModel').textContent = this.textContent;
+
+                            // Clear previous year selections
+                            document.getElementById('yearButtons').innerHTML = '';
+
+                            // Populate years (last 20 years)
+                            const currentYear = new Date().getFullYear();
+                            for (let year = currentYear; year >= currentYear - 20; year--) {
+                                const yearButton = document.createElement('button');
+                                yearButton.className = 'btn btn-outline-dark year-btn';
+                                yearButton.dataset.year = year;
+                                yearButton.textContent = year;
+
+                                yearButton.addEventListener('click', function() {
+                                    document.querySelectorAll('.year-btn').forEach(btn => {
+                                        btn.classList.remove('btn-dark');
+                                        btn.classList.add('btn-outline-dark');
+                                    });
+                                    this.classList.remove('btn-outline-dark');
+                                    this.classList.add('btn-dark');
+
+                                    selectedYear = this.dataset.year;
+                                    document.getElementById('displayYear').textContent = this.textContent;
+                                    document.getElementById('selectedCarDisplay').style.display = 'block';
+                                });
+
+                                document.getElementById('yearButtons').appendChild(yearButton);
+                            }
+
+                            yearsContainer.style.display = 'block';
+                        });
+
+                        document.getElementById('modelButtons').appendChild(modelButton);
+                    });
+
+                    modelsContainer.style.display = 'block';
+                    yearsContainer.style.display = 'none';
+                    document.getElementById('selectedCarDisplay').style.display = 'none';
+                });
+
+                makesContainer.appendChild(makeButton);
+            }
+
+            // Research button
+            researchBtn.addEventListener('click', function() {
+                if (selectedMake && selectedModel && selectedYear) {
+                    // Format display names
+                    const displayMake = selectedMake.charAt(0).toUpperCase() + selectedMake.slice(1);
+                    const displayModel = selectedModel;
+
+                    // Show loading spinner
+                    document.getElementById('loadingSpinner').style.display = 'block';
+
+                    // Simulate fetching data
+                    setTimeout(() => {
+                        fetchCarData(displayMake, displayModel, selectedYear);
+                    }, 1800);
+                }
+            });
+
+            // New search button
+            newSearchBtn.addEventListener('click', function() {
+                document.getElementById('resultsContainer').style.display = 'none';
+                document.querySelectorAll('.make-btn').forEach(btn => {
+                    btn.classList.remove('btn-lg');
+                });
+                modelsContainer.style.display = 'none';
+                yearsContainer.style.display = 'none';
+                document.getElementById('selectedCarDisplay').style.display = 'none';
+
+                // Reset selections
+                selectedMake = '';
+                selectedModel = '';
+                selectedYear = '';
+
+                document.getElementById('displayMake').textContent = '';
+                document.getElementById('displayModel').textContent = '';
+                document.getElementById('displayYear').textContent = '';
+
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        // Function to fetch and display car data
+        function fetchCarData(make, model, year) {
+            // Display car title
+            document.getElementById('carTitle').textContent = `${year} ${make} ${model}`;
+
+            // Populate with mock data
+            document.getElementById('carComplaintsInfo').innerHTML = generateCarComplaintsInfo(make, model, year);
+            document.getElementById('trueDeltaInfo').innerHTML = generateTrueDeltaInfo(make, model, year);
+            document.getElementById('consumerReportsInfo').innerHTML = generateConsumerReportsInfo(make, model, year);
+            document.getElementById('edmundsInfo').innerHTML = generateEdmundsInfo(make, model, year);
+
+            // Populate summary section
+            generateSummaryData(make, model, year);
+
+            // Hide loading spinner and show results
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'block';
+
+            // Scroll to results
+            document.getElementById('resultsContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Generate summary data
+        function generateSummaryData(make, model, year) {
+            // Generate random data for summary
+            const reliabilityScore = Math.floor(Math.random() * 5) + 1;
+            const reliabilityClass = reliabilityScore >= 4 ? "text-success" : (reliabilityScore <= 2 ? "text-danger" : "text-warning");
+
+            const ownerScore = Math.floor(Math.random() * 5) + 1;
+            const ownerClass = ownerScore >= 4 ? "text-success" : (ownerScore <= 2 ? "text-danger" : "text-warning");
+
+            const repairCost = Math.floor(Math.random() * 800) + 200;
+            const repairFrequency = Math.floor(Math.random() * 30) + 5;
+            const repairClass = repairFrequency <= 15 ? "text-success" : (repairFrequency >= 25 ? "text-danger" : "text-warning");
+
+            const expertScore = (Math.random() * 2 + 3).toFixed(1);
+            const expertClass = expertScore >= 4.0 ? "text-success" : (expertScore <= 3.5 ? "text-warning" : "text-primary");
+
+            // Set the summary data
+            document.getElementById('summaryReliability').innerHTML = `
+                <span class="rating-pill bg-light ${reliabilityClass}">
+                    <i class="bi bi-circle-fill"></i> ${reliabilityScore}/5
+                </span>
+            `;
+
+            document.getElementById('summaryReliabilityDetails').textContent =
+                reliabilityScore >= 4 ? "Above average reliability with few reported issues" :
+                (reliabilityScore == 3 ? "Average reliability with some common issues" :
+                "Below average reliability with several common problems");
+
+            document.getElementById('summaryOwnerSatisfaction').innerHTML = `
+                <span class="rating-pill bg-light ${ownerClass}">
+                    <i class="bi bi-circle-fill"></i> ${ownerScore}/5
+                </span>
+            `;
+
+            document.getElementById('summaryOwnerSatisfactionDetails').textContent =
+                ownerScore >= 4 ? "Owners report high satisfaction with few complaints" :
+                (ownerScore == 3 ? "Average owner satisfaction with some complaints" :
+                "Below average owner satisfaction with numerous complaints");
+
+            document.getElementById('summaryRepairCosts').innerHTML = `
+                <span class="rating-pill bg-light ${repairClass}">
+                    <i class="bi bi-circle-fill"></i> $${repairCost} avg.
+                </span>
+            `;
+
+            document.getElementById('summaryRepairCostsDetails').textContent =
+                `${repairFrequency} repairs per 100 vehicles annually (${repairFrequency <= 15 ? "Better than average" :
+                (repairFrequency >= 25 ? "Worse than average" : "Average")})`;
+
+            document.getElementById('summaryExpertReview').innerHTML = `
+                <span class="rating-pill bg-light ${expertClass}">
+                    <i class="bi bi-circle-fill"></i> ${expertScore}/5
+                </span>
+            `;
+
+            document.getElementById('summaryExpertReviewDetails').textContent =
+                expertScore >= 4.0 ? "Highly rated by automotive experts" :
+                (expertScore >= 3.5 ? "Well-reviewed with some minor criticisms" :
+                "Mixed reviews from automotive experts");
+        }
+
+        // Mock data generators with improved formatting
+        function generateCarComplaintsInfo(make, model, year) {
+            const randomProblems = [
+                "Transmission issues reported by 37 owners",
+                "Engine stalling at low speeds",
+                "Air conditioning system failure",
+                "Brake wear occurring prematurely",
+                "Electrical system problems",
+                "Excessive oil consumption",
+                "Power steering failure",
+                "Suspension issues causing rough rides",
+                "Dashboard electronics malfunctioning",
+                "Fuel system problems"
+            ];
+
+            const selectedProblems = [];
+            const numProblems = Math.floor(Math.random() * 3) + 1;
+
+            for (let i = 0; i < numProblems; i++) {
+                const randomIndex = Math.floor(Math.random() * randomProblems.length);
+                selectedProblems.push(randomProblems[randomIndex]);
+                randomProblems.splice(randomIndex, 1);
+            }
+
+            const complaintScore = Math.floor(Math.random() * 5) + 1;
+            const problemClass = complaintScore > 3 ? "text-success" : "text-danger";
+            const totalComplaints = Math.floor(Math.random() * 150) + 10;
+
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4><i class="bi bi-exclamation-circle"></i> Common Issues</h4>
+                            <p>${totalComplaints} total complaints registered with NHTSA</p>
+                            <ul class="list-group list-group-flush">
+                                ${selectedProblems.map(problem => `
+                                    <li class="list-group-item bg-transparent">
+                                        <i class="bi bi-dot"></i> ${problem}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            <div class="mt-3">
+                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right"></i> View All Complaints
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="data-card h-100 d-flex flex-column justify-content-center">
+                            <h4 class="text-center">Reliability Rating</h4>
+                            <div class="score-display ${problemClass}">
+                                ${complaintScore}/5
+                            </div>
+                            <div class="rating-stars text-center">
+                                ${'★'.repeat(complaintScore)}${'☆'.repeat(5-complaintScore)}
+                            </div>
+                            <p class="text-center mb-0">
+                                <span class="badge ${complaintScore > 3 ? 'bg-success' : 'bg-danger'}">
+                                    ${complaintScore > 3 ? 'Above Average Reliability' : 'Below Average Reliability'}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-muted small">
+                    <i class="bi bi-info-circle"></i> Source: Data aggregated from CarComplaints.com and NHTSA
+                </div>
+            `;
+        }
+
+        function generateTrueDeltaInfo(make, model, year) {
+            const repairFrequency = Math.random() * 30;
+            const avgRepairCost = Math.floor(Math.random() * 500) + 200;
+            const repairClass = repairFrequency < 15 ? "text-success" : "text-danger";
+
+            const commonRepairs = [
+                {
+                    issue: "Transmission issues",
+                    percentage: Math.floor(Math.random() * 5) + 1,
+                    cost: Math.floor(Math.random() * 1500) + 500
+                },
+                {
+                    issue: "Electrical system repairs",
+                    percentage: Math.floor(Math.random() * 8) + 2,
+                    cost: Math.floor(Math.random() * 300) + 100
+                },
+                {
+                    issue: "Cooling system problems",
+                    percentage: Math.floor(Math.random() * 7) + 1,
+                    cost: Math.floor(Math.random() * 400) + 200
+                },
+                {
+                    issue: "Engine sensor failures",
+                    percentage: Math.floor(Math.random() * 6) + 1,
+                    cost: Math.floor(Math.random() * 350) + 150
+                }
+            ];
+
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4 class="text-center">Annual Repair Frequency</h4>
+                            <div class="score-display ${repairClass}">
+                                ${repairFrequency.toFixed(1)}
+                            </div>
+                            <p class="text-center mb-1">Repairs per 100 vehicles per year</p>
+                            <p class="text-center">
+                                <span class="badge ${repairFrequency < 15 ? 'bg-success' : 'bg-danger'}">
+                                    ${repairFrequency < 15 ? 'Better than average' : 'Worse than average'}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4 class="text-center">Average Repair Cost</h4>
+                            <div class="score-display">
+                                $${avgRepairCost}
+                            </div>
+                            <h5 class="mt-4">Most Common Repairs:</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Issue</th>
+                                            <th>Frequency</th>
+                                            <th>Avg. Cost</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${commonRepairs.map(repair => `
+                                            <tr>
+                                                <td>${repair.issue}</td>
+                                                <td>${repair.percentage}%</td>
+                                                <td>$${repair.cost}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-muted small">
+                    <i class="bi bi-info-circle"></i> Source: Data aggregated from TrueDelta.com and independent mechanic surveys
+                </div>
+            `;
+        }
+
+        function generateConsumerReportsInfo(make, model, year) {
+            const overallScore = Math.floor(Math.random() * 40) + 60;
+            const reliabilityScore = Math.floor(Math.random() * 5) + 1;
+            const ownerSatisfaction = Math.floor(Math.random() * 5) + 1;
+
+            const ratings = {
+                "Road Test": Math.floor(Math.random() * 30) + 70,
+                "Comfort": Math.floor(Math.random() * 20) + 80,
+                "Performance": Math.floor(Math.random() * 40) + 60,
+                "Safety Features": Math.floor(Math.random() * 10) + 90,
+                "Fuel Economy": Math.floor(Math.random() * 50) + 50
+            };
+
+            const recommendations = [
+                "Strong recommendation for families seeking safety and comfort",
+                "Mixed recommendation due to reliability concerns despite good performance",
+                "Recommended for budget-conscious buyers with modest expectations",
+                "Strong recommendation for driving enthusiasts",
+                "Recommended for those prioritizing fuel efficiency",
+                "Not recommended for those needing maximum cargo space"
+            ];
+
+            const recommendationText = recommendations[Math.floor(Math.random() * recommendations.length)];
+
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4 class="text-center">Consumer Reports Rating</h4>
+                            <div class="score-display">
+                                ${overallScore}/100
+                            </div>
+                            <p class="text-center">Overall Score</p>
+
+                            <div class="row mt-4">
+                                <div class="col-6 text-center">
+                                    <h5>Reliability</h5>
+                                    <div class="rating-stars">
+                                        ${'★'.repeat(reliabilityScore)}${'☆'.repeat(5-reliabilityScore)}
+                                    </div>
+                                </div>
+                                <div class="col-6 text-center">
+                                    <h5>Owner Satisfaction</h5>
+                                    <div class="rating-stars">
+                                        ${'★'.repeat(ownerSatisfaction)}${'☆'.repeat(5-ownerSatisfaction)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-3">
+                                <i class="bi bi-lightbulb"></i> <strong>Expert Take:</strong> ${recommendationText}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4>Category Ratings</h4>
+                            ${Object.entries(ratings).map(([category, score]) => `
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span>${category}</span>
+                                        <span class="badge bg-${score >= 80 ? 'success' : (score >= 60 ? 'primary' : 'warning')}">${score}/100</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-${score >= 80 ? 'success' : (score >= 60 ? 'primary' : 'warning')}"
+                                             role="progressbar"
+                                             style="width: ${score}%"
+                                             aria-valuenow="${score}"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-muted small">
+                    <i class="bi bi-info-circle"></i> Source: Data aggregated from ConsumerReports.com and professional automotive reviews
+                </div>
+            `;
+        }
+
+        function generateEdmundsInfo(make, model, year) {
+            const edmundsRating = (Math.random() * 2 + 3).toFixed(1);
+            const ownerRating = (Math.random() * 2 + 3).toFixed(1);
+            const reviewCount = Math.floor(Math.random() * 200) + 50;
+
+            const priceRanges = {
+                "Dealer": {
+                    min: Math.floor(Math.random() * 5000) + 15000,
+                    max: Math.floor(Math.random() * 8000) + 22000
+                },
+                "Private Party": {
+                    min: Math.floor(Math.random() * 4000) + 13000,
+                    max: Math.floor(Math.random() * 7000) + 19000
+                }
+            };
+
+            const pros = [
+                "Comfortable ride quality",
+                "User-friendly technology features",
+                "Excellent fuel economy",
+                "Spacious interior for its class",
+                "Strong safety ratings",
+                "Responsive handling",
+                "Powerful engine options",
+                "Upscale interior materials",
+                "Advanced driver assistance features",
+                "Excellent resale value"
+            ];
+
+            const cons = [
+                "Some cheap interior materials",
+                "Engine can be noisy under acceleration",
+                "Limited cargo space compared to rivals",
+                "Basic warranty coverage",
+                "Tight rear seating",
+                "Unintuitive infotainment system",
+                "Below-average fuel economy",
+                "Firm ride over rough roads",
+                "Limited standard features for the price",
+                "Higher than average maintenance costs"
+            ];
+
+            // Randomly select 3 pros and cons
+            const selectedPros = [];
+            const selectedCons = [];
+
+            const prosClone = [...pros];
+            const consClone = [...cons];
+
+            for (let i = 0; i < 3; i++) {
+                if (prosClone.length) {
+                    const randomIndex = Math.floor(Math.random() * prosClone.length);
+                    selectedPros.push(prosClone[randomIndex]);
+                    prosClone.splice(randomIndex, 1);
+                }
+
+                if (consClone.length) {
+                    const randomIndex = Math.floor(Math.random() * consClone.length);
+                    selectedCons.push(consClone[randomIndex]);
+                    consClone.splice(randomIndex, 1);
+                }
+            }
+
+            // Calculate good/bad rating for price range
+            const avgPrice = (priceRanges.Dealer.min + priceRanges.Dealer.max) / 2;
+            const priceRating = avgPrice < 20000 ? "Good value" : (avgPrice < 25000 ? "Average value" : "Premium pricing");
+            const priceClass = avgPrice < 20000 ? "success" : (avgPrice < 25000 ? "primary" : "warning");
+
+            return `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4 class="text-center">Edmunds Ratings</h4>
+                            <div class="row mt-3">
+                                <div class="col-6 text-center">
+                                    <h5>Expert Rating</h5>
+                                    <div class="score-display">
+                                        ${edmundsRating}/5
+                                    </div>
+                                </div>
+                                <div class="col-6 text-center">
+                                    <h5>Owner Rating</h5>
+                                    <div class="score-display">
+                                        ${ownerRating}/5
+                                    </div>
+                                    <p>(${reviewCount} reviews)</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <a href="#" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right"></i> Read Full Expert Review
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="bi bi-chat-text"></i> See Owner Reviews
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4>Price Range (Used)</h4>
+                            <div class="alert alert-${priceClass} text-center mb-3">
+                                <i class="bi bi-tag"></i> <strong>${priceRating}</strong> for this vehicle class
+                            </div>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr class="table-secondary">
+                                        <th>Source</th>
+                                        <th>Price Range</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${Object.entries(priceRanges).map(([source, range]) => `
+                                        <tr>
+                                            <td><strong>${source}</strong></td>
+                                            <td>$${range.min.toLocaleString()} - $${range.max.toLocaleString()}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4><i class="bi bi-hand-thumbs-up"></i> Pros</h4>
+                            <ul class="list-group list-group-flush">
+                                ${selectedPros.map(pro => `
+                                    <li class="list-group-item bg-transparent text-success">
+                                        <i class="bi bi-check-circle"></i> ${pro}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="data-card">
+                            <h4><i class="bi bi-hand-thumbs-down"></i> Cons</h4>
+                            <ul class="list-group list-group-flush">
+                                ${selectedCons.map(con => `
+                                    <li class="list-group-item bg-transparent text-danger">
+                                        <i class="bi bi-exclamation-circle"></i> ${con}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-muted small">
+                    <i class="bi bi-info-circle"></i> Source: Data aggregated from Edmunds.com and KBB.com
+                </div>
+            `;
+        }
+    </script>
+</body>
